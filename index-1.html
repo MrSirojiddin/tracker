@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0"/>
+  <title>Trading Tracker</title>
+  <meta name="description" content="Kunlik savdo natijalarini kuzatish"/>
+  <meta name="theme-color" content="#0d0d14"/>
+  <meta name="mobile-web-app-capable" content="yes"/>
+  <meta name="apple-mobile-web-app-capable" content="yes"/>
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+  <meta name="apple-mobile-web-app-title" content="Trading"/>
+  <link rel="manifest" href="manifest.json"/>
+  <!-- Apple touch icon inline SVG fallback -->
+  <link rel="apple-touch-icon" href="icon.png"/>
+  <style>
+    *{box-sizing:border-box;margin:0;padding:0;}
+    body{background:#0d0d14;color:#e8e8f0;font-family:'Inter','Segoe UI',sans-serif;min-height:100vh;}
+    input,button{font-family:inherit;}
+    #app{max-width:560px;margin:0 auto;padding:20px;}
+
+    /* Setup screen */
+    #setup{display:flex;align-items:center;justify-content:center;min-height:100vh;padding:24px;}
+    .setup-card{background:#13131f;border:1px solid #1e1e30;border-radius:20px;padding:40px 32px;width:100%;max-width:420px;}
+    .setup-icon{font-size:40px;text-align:center;margin-bottom:12px;}
+    .setup-title{text-align:center;font-size:24px;font-weight:700;margin-bottom:8px;}
+    .setup-sub{text-align:center;color:#6b6b8a;font-size:14px;margin-bottom:32px;}
+    .field-label{color:#9090aa;font-size:13px;font-weight:600;letter-spacing:.05em;display:block;margin-bottom:8px;}
+    .setup-input{display:block;width:100%;padding:14px 16px;border-radius:12px;border:1.5px solid #2a2a40;background:#0d0d14;color:#e8e8f0;font-size:18px;font-weight:600;outline:none;transition:border-color .2s;}
+    .setup-input:focus{border-color:#7c6fff;}
+    .btn-start{margin-top:20px;width:100%;padding:15px;border-radius:12px;border:none;background:linear-gradient(135deg,#7c6fff,#5b4fff);color:#fff;font-size:16px;font-weight:700;cursor:pointer;transition:opacity .2s;}
+    .btn-start:hover{opacity:.88;}
+
+    /* Main screen */
+    #main{display:none;}
+    .topbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;}
+    .topbar h2{font-size:20px;font-weight:700;}
+    .topbar p{color:#6b6b8a;font-size:13px;margin-top:2px;}
+    .btn-reset{padding:7px 14px;border-radius:8px;border:1px solid #2a2a40;background:transparent;color:#6b6b8a;font-size:13px;cursor:pointer;}
+
+    /* Balance card */
+    .balance-card{background:linear-gradient(135deg,#1a1a2e,#16213e);border:1px solid #2a2a50;border-radius:18px;padding:24px;margin-bottom:16px;box-shadow:0 8px 32px rgba(124,111,255,.1);}
+    .bal-label{color:#9090aa;font-size:13px;font-weight:600;margin-bottom:6px;}
+    .bal-amount{font-size:36px;font-weight:800;letter-spacing:-1px;}
+    .bal-change{margin-top:8px;font-size:14px;font-weight:600;}
+    .bal-change span{color:#6b6b8a;font-weight:400;margin-left:8px;}
+    .stats-row{display:flex;gap:12px;margin-top:20px;padding-top:20px;border-top:1px solid #2a2a40;}
+    .stat{flex:1;text-align:center;}
+    .stat-val{font-size:20px;font-weight:800;}
+    .stat-label{font-size:11px;color:#6b6b8a;margin-top:2px;}
+
+    /* Add day */
+    .add-card{background:#13131f;border:1px solid #1e1e30;border-radius:16px;padding:20px;margin-bottom:16px;}
+    .card-label{color:#9090aa;font-size:13px;font-weight:600;margin-bottom:12px;}
+    .note-input{width:100%;padding:10px 14px;border-radius:10px;border:1px solid #2a2a40;background:#0d0d14;color:#e8e8f0;font-size:14px;margin-bottom:12px;outline:none;}
+    .btn-row{display:flex;gap:10px;}
+    .btn-win{flex:1;padding:14px;border-radius:12px;border:none;background:linear-gradient(135deg,#16a34a,#15803d);color:#fff;font-size:15px;font-weight:700;cursor:pointer;transition:opacity .2s;}
+    .btn-win:hover{opacity:.85;}
+    .btn-lose{flex:1;padding:14px;border-radius:12px;border:none;background:linear-gradient(135deg,#dc2626,#b91c1c);color:#fff;font-size:15px;font-weight:700;cursor:pointer;transition:opacity .2s;}
+    .btn-lose:hover{opacity:.85;}
+    .next-bal{margin-top:12px;padding:10px 14px;border-radius:10px;background:#0d0d14;border:1px solid #2a2a40;font-size:13px;color:#9090aa;}
+    .next-bal strong{color:#e8e8f0;}
+
+    /* History */
+    .history-card{background:#13131f;border:1px solid #1e1e30;border-radius:16px;padding:20px;}
+    .day-item{display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:12px;margin-bottom:8px;}
+    .day-item:last-child{margin-bottom:0;}
+    .day-win{background:rgba(74,222,128,.06);border:1px solid rgba(74,222,128,.15);}
+    .day-lose{background:rgba(248,113,113,.06);border:1px solid rgba(248,113,113,.15);}
+    .day-icon{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;}
+    .icon-win{background:rgba(74,222,128,.15);}
+    .icon-lose{background:rgba(248,113,113,.15);}
+    .day-info{flex:1;min-width:0;}
+    .day-title{font-weight:700;font-size:14px;}
+    .day-date{color:#6b6b8a;font-weight:400;margin-left:6px;font-size:12px;}
+    .day-note{color:#6b6b8a;font-size:12px;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+    .day-right{text-align:right;flex-shrink:0;}
+    .day-chg{font-weight:700;font-size:14px;}
+    .day-newbal{color:#9090aa;font-size:12px;}
+
+    /* Modal */
+    .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.7);display:flex;align-items:center;justify-content:center;padding:20px;z-index:100;display:none;}
+    .modal-box{background:#13131f;border:1px solid #2a2a40;border-radius:16px;padding:28px;max-width:340px;width:100%;}
+    .modal-title{color:#f87171;font-size:18px;font-weight:700;margin-bottom:10px;}
+    .modal-text{color:#9090aa;font-size:14px;margin-bottom:20px;}
+    .modal-btns{display:flex;gap:10px;}
+    .btn-cancel{flex:1;padding:12px;border-radius:10px;border:1px solid #2a2a40;background:transparent;color:#e8e8f0;cursor:pointer;font-weight:600;font-size:14px;}
+    .btn-confirm{flex:1;padding:12px;border-radius:10px;border:none;background:#dc2626;color:#fff;cursor:pointer;font-weight:600;font-size:14px;}
+  </style>
+</head>
+<body>
+
+<!-- Setup Screen -->
+<div id="setup">
+  <div class="setup-card">
+    <div class="setup-icon">📊</div>
+    <div class="setup-title">Trading Tracker</div>
+    <div class="setup-sub">Har kuni +20% yoki −20% natijangizni kuzating</div>
+    <label class="field-label">BOSHLANG'ICH BALANS ($)</label>
+    <input class="setup-input" type="number" id="startInput" placeholder="Masalan: 1000" inputmode="decimal"/>
+    <button class="btn-start" onclick="startTracker()">Boshlash →</button>
+  </div>
+</div>
+
+<!-- Main Screen -->
+<div id="main">
+  <div id="app">
+    <div class="topbar">
+      <div>
+        <h2>📊 Trading Tracker</h2>
+        <p id="startLabel"></p>
+      </div>
+      <button class="btn-reset" onclick="showReset()">Qayta boshlash</button>
+    </div>
+
+    <!-- Balance card -->
+    <div class="balance-card">
+      <div class="bal-label">JORIY BALANS</div>
+      <div class="bal-amount" id="currentBal">$0</div>
+      <div class="bal-change" id="totalChange"></div>
+      <div class="stats-row">
+        <div class="stat"><div class="stat-val" id="sDays">0</div><div class="stat-label">Kunlar</div></div>
+        <div class="stat"><div class="stat-val" style="color:#4ade80" id="sWins">0</div><div class="stat-label">✅ G'alaba</div></div>
+        <div class="stat"><div class="stat-val" style="color:#f87171" id="sLosses">0</div><div class="stat-label">❌ Mag'lub</div></div>
+        <div class="stat"><div class="stat-val" style="color:#7c6fff" id="sWinRate">—</div><div class="stat-label">Win rate</div></div>
+      </div>
+    </div>
+
+    <!-- Add day -->
+    <div class="add-card">
+      <div class="card-label" id="dayLabel">KUN 1 NATIJASINI QO'SHISH</div>
+      <input class="note-input" type="text" id="noteInput" placeholder="Izoh (ixtiyoriy)..."/>
+      <div class="btn-row">
+        <button class="btn-win" onclick="addDay(true)">✅ +20% G'alaba</button>
+        <button class="btn-lose" onclick="addDay(false)">❌ −20% Mag'lub</button>
+      </div>
+      <div class="next-bal" id="nextBalNote" style="display:none"></div>
+    </div>
+
+    <!-- History -->
+    <div class="history-card" id="historyCard" style="display:none">
+      <div class="card-label">KUNLIK TARIX</div>
+      <div id="historyList"></div>
+    </div>
+  </div>
+</div>
+
+<!-- Reset Modal -->
+<div class="modal-overlay" id="resetModal">
+  <div class="modal-box">
+    <div class="modal-title">⚠️ Qayta boshlash</div>
+    <div class="modal-text">Barcha ma'lumotlar o'chiriladi. Davom etasizmi?</div>
+    <div class="modal-btns">
+      <button class="btn-cancel" onclick="hideReset()">Bekor qilish</button>
+      <button class="btn-confirm" onclick="resetAll()">Ha, o'chirish</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const KEY = 'trading_tracker_v1';
+let state = { balance: null, days: [] };
+
+function fmt(n) {
+  return new Intl.NumberFormat('uz-UZ',{minimumFractionDigits:0}).format(Math.round(Math.abs(n)));
+}
+
+function save() {
+  localStorage.setItem(KEY, JSON.stringify(state));
+}
+
+function load() {
+  try { const d = JSON.parse(localStorage.getItem(KEY)); if(d && d.balance) state = d; } catch{}
+}
+
+function currentBalance() {
+  return state.days.length > 0 ? state.days[state.days.length-1].newBalance : state.balance;
+}
+
+function render() {
+  const bal = currentBalance();
+  const gain = bal - state.balance;
+  const gainPct = ((gain / state.balance)*100).toFixed(1);
+  const wins = state.days.filter(d=>d.win).length;
+  const losses = state.days.filter(d=>!d.win).length;
+
+  document.getElementById('startLabel').textContent = `Boshlang'ich: $${fmt(state.balance)}`;
+  document.getElementById('currentBal').textContent = `$${fmt(bal)}`;
+
+  const chgEl = document.getElementById('totalChange');
+  const sign = gain >= 0 ? '+' : '-';
+  const color = gain >= 0 ? '#4ade80' : '#f87171';
+  chgEl.innerHTML = `<span style="color:${color}">${sign}$${fmt(gain)} (${sign}${Math.abs(gainPct)}%)</span><span> boshlang'ichdan</span>`;
+
+  document.getElementById('sDays').textContent = state.days.length;
+  document.getElementById('sWins').textContent = wins;
+  document.getElementById('sLosses').textContent = losses;
+  document.getElementById('sWinRate').textContent = state.days.length ? Math.round((wins/state.days.length)*100)+'%' : '—';
+
+  document.getElementById('dayLabel').textContent = `KUN ${state.days.length+1} NATIJASINI QO'SHISH`;
+
+  if(state.days.length > 0) {
+    const nb = document.getElementById('nextBalNote');
+    nb.style.display = 'block';
+    nb.innerHTML = `Keyingi kun boshlanadi: <strong>$${fmt(bal)}</strong> balansdan`;
+  }
+
+  // History
+  const histCard = document.getElementById('historyCard');
+  const histList = document.getElementById('historyList');
+  if(state.days.length > 0) {
+    histCard.style.display = 'block';
+    histList.innerHTML = [...state.days].reverse().map(d => {
+      const w = d.win;
+      const chgSign = w ? '+' : '-';
+      const chgColor = w ? '#4ade80' : '#f87171';
+      const noteHtml = d.note ? `<div class="day-note">${d.note}</div>` : '';
+      return `
+        <div class="day-item ${w?'day-win':'day-lose'}">
+          <div class="day-icon ${w?'icon-win':'icon-lose'}">${w?'✅':'❌'}</div>
+          <div class="day-info">
+            <div class="day-title">Kun ${d.day}<span class="day-date">${d.date}</span></div>
+            ${noteHtml}
+          </div>
+          <div class="day-right">
+            <div class="day-chg" style="color:${chgColor}">${chgSign}$${fmt(d.change)}</div>
+            <div class="day-newbal">→ $${fmt(d.newBalance)}</div>
+          </div>
+        </div>`;
+    }).join('');
+  }
+}
+
+function startTracker() {
+  const val = parseFloat(document.getElementById('startInput').value);
+  if(!val || val <= 0) return;
+  state = { balance: val, days: [] };
+  save();
+  document.getElementById('setup').style.display = 'none';
+  document.getElementById('main').style.display = 'block';
+  render();
+}
+
+function addDay(win) {
+  const today = new Date();
+  const label = today.toLocaleDateString('uz-UZ',{day:'2-digit',month:'2-digit',year:'numeric'});
+  const prev = currentBalance();
+  const change = win ? prev * 0.2 : prev * 0.2;
+  const newBal = win ? prev + change : prev - change;
+  const note = document.getElementById('noteInput').value.trim();
+  state.days.push({
+    day: state.days.length+1, date: label, win,
+    prevBalance: prev, change, newBalance: newBal, note
+  });
+  document.getElementById('noteInput').value = '';
+  save();
+  render();
+}
+
+function showReset() { document.getElementById('resetModal').style.display = 'flex'; }
+function hideReset() { document.getElementById('resetModal').style.display = 'none'; }
+function resetAll() {
+  localStorage.removeItem(KEY);
+  state = { balance: null, days: [] };
+  hideReset();
+  document.getElementById('setup').style.display = 'flex';
+  document.getElementById('main').style.display = 'none';
+  document.getElementById('startInput').value = '';
+}
+
+// Boot
+load();
+if(state.balance) {
+  document.getElementById('setup').style.display = 'none';
+  document.getElementById('main').style.display = 'block';
+  render();
+}
+
+// Register service worker
+if('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('sw.js').catch(()=>{});
+}
+</script>
+</body>
+</html>
