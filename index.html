@@ -131,8 +131,8 @@
       <div class="card-label" id="dayLabel">KUN 1 NATIJASINI QO'SHISH</div>
       <input class="note-input" type="text" id="noteInput" placeholder="Izoh (ixtiyoriy)..."/>
       <div class="btn-row">
-        <button class="btn-win" onclick="addDay(true)">✅ +20% G'alaba</button>
-        <button class="btn-lose" onclick="addDay(false)">❌ −20% Mag'lub</button>
+        <button class="btn-win" id="btnWin" onclick="addDay(true)">✅ +$— G'alaba</button>
+        <button class="btn-lose" id="btnLose" onclick="addDay(false)">❌ −$— Mag'lub</button>
       </div>
       <div class="next-bal" id="nextBalNote" style="display:none"></div>
     </div>
@@ -198,6 +198,10 @@ function render() {
   document.getElementById('sWinRate').textContent = state.days.length ? Math.round((wins/state.days.length)*100)+'%' : '—';
 
   document.getElementById('dayLabel').textContent = `KUN ${state.days.length+1} NATIJASINI QO'SHISH`;
+
+  const amt = (bal * 0.2);
+  document.getElementById('btnWin').textContent = `✅ +$${fmt(amt)} G'alaba`;
+  document.getElementById('btnLose').textContent = `❌ −$${fmt(amt)} Mag'lub`;
 
   if(state.days.length > 0) {
     const nb = document.getElementById('nextBalNote');
