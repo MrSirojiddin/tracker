@@ -128,7 +128,13 @@
 
     <!-- Add day -->
     <div class="add-card">
-      <div class="card-label" id="dayLabel">KUN 1 NATIJASINI QO'SHISH</div>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+        <div class="card-label" id="dayLabel" style="margin-bottom:0">KUN 1 NATIJASINI QO'SHISH</div>
+        <button id="toggleCustom" onclick="toggleCustomMode()" style="padding:5px 12px;border-radius:8px;border:1px solid #2a2a40;background:transparent;color:#9090aa;font-size:12px;cursor:pointer;font-family:inherit;">Maxsus summa</button>
+      </div>
+      <div id="customRow" style="display:none;margin-bottom:10px;">
+        <input class="note-input" type="number" id="customInput" placeholder="Summa kiriting ($)" inputmode="decimal" style="margin-bottom:0;" oninput="updateCustomButtons()"/>
+      </div>
       <input class="note-input" type="text" id="noteInput" placeholder="Izoh (ixtiyoriy)..."/>
       <div class="btn-row">
         <button class="btn-win" id="btnWin" onclick="addDay(true)">✅ $— G'alaba</button>
@@ -199,9 +205,9 @@ function render() {
 
   document.getElementById('dayLabel').textContent = `KUN ${state.days.length+1} NATIJASINI QO'SHISH`;
 
-  const amt = (bal * 0.2);
-  document.getElementById('btnWin').textContent = `✅ +$${fmt(amt)} G'alaba`;
-  document.getElementById('btnLose').textContent = `❌ −$${fmt(amt)} Mag'lub`;
+  if (!customMode) {
+    updateButtonLabels(bal * 0.2);
+  }
 
   if(state.days.length > 0) {
     const nb = document.getElementById('nextBalNote');
@@ -245,18 +251,56 @@ function startTracker() {
   render();
 }
 
+let customMode = false;
+
+function toggleCustomMode() {
+  customMode = !customMode;
+  const row = document.getElementById('customRow');
+  const btn = document.getElementById('toggleCustom');
+  const inp = document.getElementById('customInput');
+  row.style.display = customMode ? 'block' : 'none';
+  btn.style.color = customMode ? '#7c6fff' : '#9090aa';
+  btn.style.borderColor = customMode ? '#7c6fff' : '#2a2a40';
+  if (!customMode) {
+    inp.value = '';
+    updateButtonLabels(currentBalance() * 0.2);
+  }
+}
+
+function updateCustomButtons() {
+  const val = parseFloat(document.getElementById('customInput').value);
+  if (val > 0) {
+    updateButtonLabels(val);
+  } else {
+    updateButtonLabels(currentBalance() * 0.2);
+  }
+}
+
+function updateButtonLabels(amt) {
+  document.getElementById('btnWin').textContent = `✅ $${fmt(amt)} G'alaba`;
+  document.getElementById('btnLose').textContent = `❌ q$${fmt(amt)} Mag'lub`;
+}
+
 function addDay(win) {
   const today = new Date();
   const label = today.toLocaleDateString('uz-UZ',{day:'2-digit',month:'2-digit',year:'numeric'});
   const prev = currentBalance();
-  const change = win ? prev * 0.2 : prev * 0.2;
+  let change;
+  if (customMode) {
+    const customVal = parseFloat(document.getElementById('customInput').value);
+    change = (customVal > 0) ? customVal : prev * 0.2;
+  } else {
+    change = prev * 0.2;
+  }
   const newBal = win ? prev + change : prev - change;
   const note = document.getElementById('noteInput').value.trim();
   state.days.push({
     day: state.days.length+1, date: label, win,
-    prevBalance: prev, change, newBalance: newBal, note
+    prevBalance: prev, change, newBalance: newBal, note,
+    custom: customMode
   });
   document.getElementById('noteInput').value = '';
+  if (customMode) document.getElementById('customInput').value = '';
   save();
   render();
 }
